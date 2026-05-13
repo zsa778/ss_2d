@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using SliceShoot.Core;
 
 namespace SliceShoot.Monster
 {
@@ -86,8 +87,21 @@ namespace SliceShoot.Monster
             Monster m = Instantiate(data.prefab, position, Quaternion.identity);
             m.Initialize(data);
             m.OnDied += OnMonsterDied;
+            m.OnHit += (hitType, hitPos) => HandleMonsterHit(m, hitType, hitPos);
             _activeMonsters.Add(m);
             return m;
+        }
+
+        private void HandleMonsterHit(Monster m, byte hitType, Vector3 hitPos)
+        {
+            Color c = hitType < HitTypeIndicator.HitTypeColors.Length
+                ? HitTypeIndicator.HitTypeColors[hitType] : Color.white;
+            c.a = 0.7f;
+            if (hitType == 1 || hitType == 4)
+                PaintManager.Instance?.SpawnBrushStroke(m.transform, hitPos, c);
+            else
+                PaintManager.Instance?.SpawnSplash(m.transform, hitPos, c);
+            ScoreManager.Instance?.RegisterHit(m.transform.position);
         }
 
         private void OnMonsterDied(Monster m)

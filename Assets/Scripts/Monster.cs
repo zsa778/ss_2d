@@ -1,13 +1,13 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using SliceShoot.Core;
 
 namespace SliceShoot.Monster
 {
     public class Monster : MonoBehaviour
     {
         public event Action<Monster> OnDied;
+        public event Action<byte, Vector3> OnHit;
         public MonsterData Data { get; private set; }
 
         [SerializeField] private MonsterData _startData;
@@ -89,15 +89,7 @@ namespace SliceShoot.Monster
             if (_currentHitIndex >= Data.hitTypes.Length) return false;
             if (Data.hitTypes[_currentHitIndex] != hitType) return false;
 
-            Color c = hitType < HitTypeIndicator.HitTypeColors.Length
-                ? HitTypeIndicator.HitTypeColors[hitType] : Color.white;
-            c.a = 0.7f;
-            if (hitType == 1 || hitType == 4)
-                PaintManager.Instance?.SpawnBrushStroke(transform, hitPosition, c);
-            else
-                PaintManager.Instance?.SpawnSplash(transform, hitPosition, c);
-
-            ScoreManager.Instance?.RegisterHit(transform.position);
+            OnHit?.Invoke(hitType, hitPosition);
             _currentHitIndex++;
 
             if (_currentHitIndex >= Data.hitTypes.Length)

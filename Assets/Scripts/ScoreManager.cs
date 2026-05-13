@@ -20,6 +20,8 @@ namespace SliceShoot.Core
         public event Action<int, Vector3> OnComboHit;
         public event Action OnComboBreak;
 
+        public int BestScore { get; private set; }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -28,6 +30,16 @@ namespace SliceShoot.Core
                 return;
             }
             Instance = this;
+            BestScore = PlayerPrefs.GetInt("BestScore", 0);
+        }
+
+        public bool TryUpdateBestScore(int score)
+        {
+            if (score <= BestScore) return false;
+            BestScore = score;
+            PlayerPrefs.SetInt("BestScore", BestScore);
+            PlayerPrefs.Save();
+            return true;
         }
 
         private void Start()

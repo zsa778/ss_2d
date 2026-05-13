@@ -36,9 +36,7 @@ namespace SliceShoot.Core
         private bool _bossActive = false;
         private bool _bossSequenceRunning = false;
         private SliceShoot.Monster.Monster _activeBoss = null;
-        private Camera _mainCamera;
-        private Vector3 _origCamPos;
-        private float _origCamSize;
+        private CameraAnimator _cameraAnimator;
 
         private void Awake()
         {
@@ -48,9 +46,8 @@ namespace SliceShoot.Core
                 return;
             }
             Instance = this;
-            _mainCamera = Camera.main;
-            _origCamPos = _mainCamera.transform.position;
-            _origCamSize = _mainCamera.orthographicSize;
+            _cameraAnimator = GetComponent<CameraAnimator>();
+            if (_cameraAnimator == null) _cameraAnimator = gameObject.AddComponent<CameraAnimator>();
         }
 
         private void Start()
@@ -121,7 +118,7 @@ namespace SliceShoot.Core
                 _activeBoss.FreezePosition(stunDuration);
 
             // Camera moves to boss position and zooms in (1s)
-            yield return StartCoroutine(LerpCamera(bossData.spawnPosition, _bossZoomSize, _cameraMoveTime));
+            yield return StartCoroutine(_cameraAnimator.LerpTo(bossData.spawnPosition, _bossZoomSize, _cameraMoveTime));
 
             // Boss plays spawn animation while camera holds (3s)
             if (_activeBoss != null)
@@ -133,7 +130,7 @@ namespace SliceShoot.Core
             yield return new WaitForSeconds(_spawnAnimDuration);
 
             // Camera returns, restore monster animations and player input
-            yield return StartCoroutine(LerpCamera(_origCamPos, _origCamSize, _cameraReturnTime));
+            yield return StartCoroutine(_cameraAnimator.LerpTo(_cameraAnimator.OriginalPos, _cameraAnimator.OriginalSize, _cameraReturnTime));
 
             SliceShoot.Monster.MonsterSpawner.Instance.SetAllMonstersAnimSpeed(1f);
             SliceShoot.Monster.MonsterSpawner.Instance.BlockRegularSpawning = false;
@@ -143,25 +140,6 @@ namespace SliceShoot.Core
             if (SliceShoot.Character.Character.Instance != null) SliceShoot.Character.Character.Instance.InputEnabled = true;
 
             _bossSequenceRunning = false;
-        }
-
-        private IEnumerator LerpCamera(Vector3 targetWorldPos, float targetSize, float duration)
-        {
-            Vector3 startPos = _mainCamera.transform.position;
-            float startSize = _mainCamera.orthographicSize;
-            Vector3 endPos = new Vector3(targetWorldPos.x, targetWorldPos.y, startPos.z);
-
-            float elapsed = 0f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                _mainCamera.transform.position = Vector3.Lerp(startPos, endPos, t);
-                _mainCamera.orthographicSize = Mathf.Lerp(startSize, targetSize, t);
-                yield return null;
-            }
-            _mainCamera.transform.position = endPos;
-            _mainCamera.orthographicSize = targetSize;
         }
 
         private void OnBossDied(SliceShoot.Monster.Monster boss)

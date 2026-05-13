@@ -16,6 +16,37 @@ namespace SliceShoot.Combat
         private bool _enhanced;
         private readonly HashSet<MonsterClass> _hitMonsters = new HashSet<MonsterClass>();
 
+        private static Sprite _cachedCircle;
+
+        public static void Create(Vector3 position, Vector3 direction, bool enhanced)
+        {
+            var go = new GameObject("Projectile");
+            go.transform.position = position;
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = GetCircleSprite();
+            sr.color = SliceShoot.Monster.HitTypeIndicator.HitTypeColors[3];
+            sr.sortingOrder = 10;
+            go.transform.localScale = Vector3.one * (enhanced ? 0.45f : 0.3f);
+
+            go.AddComponent<Projectile>().Launch(direction, enhanced);
+        }
+
+        private static Sprite GetCircleSprite()
+        {
+            if (_cachedCircle != null) return _cachedCircle;
+            _cachedCircle = Resources.Load<Sprite>("Circle");
+            if (_cachedCircle != null) return _cachedCircle;
+
+            var tex = new Texture2D(4, 4);
+            var pixels = new Color[16];
+            for (int i = 0; i < 16; i++) pixels[i] = Color.white;
+            tex.SetPixels(pixels);
+            tex.Apply();
+            _cachedCircle = Sprite.Create(tex, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 4);
+            return _cachedCircle;
+        }
+
         public void Launch(Vector3 direction, bool enhanced)
         {
             _velocity = direction.normalized * SPEED;

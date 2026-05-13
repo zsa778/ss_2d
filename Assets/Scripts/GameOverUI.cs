@@ -238,14 +238,8 @@ namespace SliceShoot.UI
             _finalScoreText.text = "FINAL SCORE: " + finalScore;
 
             // Phase 4: Best score
-            int bestScore = PlayerPrefs.GetInt("BestScore", 0);
-            bool isNewRecord = finalScore > bestScore;
-            if (isNewRecord)
-            {
-                PlayerPrefs.SetInt("BestScore", finalScore);
-                PlayerPrefs.Save();
-                bestScore = finalScore;
-            }
+            bool isNewRecord = ScoreManager.Instance.TryUpdateBestScore(finalScore);
+            int bestScore = ScoreManager.Instance.BestScore;
             _bestScoreText.text = "BEST: " + bestScore;
             _bestScoreText.color = new Color(1f, 0.84f, 0f, 1f);
 
